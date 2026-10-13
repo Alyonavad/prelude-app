@@ -1,15 +1,12 @@
 {
   "name": "prelude-prototype",
   "private": true,
-  "version": "0.1.0",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "deploy": "vite build && npx vercel deploy dist --prod",
-    "deploy:netlify": "vite build && npx netlify-cli deploy --dir=dist --prod",
-    "deploy:gh-pages": "vite build && npx gh-pages -d dist"
+    "build": "vite build && cp dist/index.html prelude-prototype-v3.html",
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.1.0",

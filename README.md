@@ -1,80 +1,24 @@
-# Prelude · wireframe prototype
+# Prelude · prototype
 
-A clickable, greyscale wireframe of the Prelude mobile app, for testing the **flow only**.
-No visual design, no backend. All data is mocked in [src/data.js](src/data.js).
+A high-fidelity, clickable mobile prototype of Prelude. No backend: all data, recording and matching are simulated.
 
-- On desktop the app renders in a 390×844 phone frame, with tester controls (Restart, Jump to screen) beside it.
-- On a phone (viewport under 500px) the frame and tester controls disappear and the app fills the screen.
-- `npm run build` writes one self-contained file, `dist/index.html`, which also opens straight from disk.
-- Progress is kept in `localStorage`, so a refresh doesn't lose your place. "Restart" clears it.
+The deliverable is one self-contained file, [prelude-prototype-v3.html](prelude-prototype-v3.html). Open it in a
+browser or put it on any static host. Script, styles and both fonts are inlined, so it works offline and from disk.
 
-## Run locally
+On desktop it shows in a phone frame; on a phone it fills the screen. Progress is kept in `localStorage`.
+
+## Run and rebuild
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open the URL Vite prints (usually http://localhost:5173). To try it on your phone on the same Wi-Fi, run `npm run dev -- --host` and open the "Network" URL.
-
-## Deploy (static site)
-
-`npm run build` produces a plain static site in `dist/`. Any static host works. Pick one:
-
-### Vercel (one command)
-
 ```bash
-npm run deploy
+npm run build
 ```
 
-The first run asks you to log in and confirm the project name. It then prints the public URL to send to testers.
-
-### Netlify
-
-```bash
-npm run deploy:netlify
-```
-
-The first run asks you to log in and create or pick a site. Alternatively, run `npm run build` and drag the `dist/` folder onto https://app.netlify.com/drop.
-
-### GitHub Pages
-
-Requires this folder to be a git repo with a GitHub remote (`origin`).
-
-```bash
-npm run deploy:gh-pages
-```
-
-This pushes `dist/` to a `gh-pages` branch. In the repo, go to Settings → Pages and choose that branch as the source. The build uses relative asset paths, so it works under `username.github.io/repo-name/` without extra config.
-
-## What is simulated
-
-| Thing | How |
-| --- | --- |
-| Voice recording | A timer and a grey bar, then a placeholder transcript. No microphone is used. |
-| Photo upload | The chosen file is previewed locally (in greyscale) and never uploaded. |
-| Mirror card | Three fixed guesses. Confirmed or rewritten guesses feed "why you resonated" and the meeting suggestion. |
-| Mutual match | Arrives about 6 seconds after you reach the waiting screen, whatever you chose. |
-| Plum's answers | Appear about 3 seconds after you send yours. |
-| Plum's Afterglow answers | Set in the tester panel (default "yes"), answered about 2.5 seconds later. A "not yet" from Plum is never shown in the app. |
-| Plum after the meeting | "How did it feel?" and "meet again?" are set in the tester panel. Only the overlap is shown. |
-| Fern | A card on Home only; the prelude isn't built. |
-| Paywall | A placeholder. "continue" goes back to matching, and the next match is Plum again with a fresh prelude. |
-
-Timings are constants at the top of [src/App.jsx](src/App.jsx). The only colours are the prelude backgrounds (lilac for Plum, mint for Fern), defined in [src/data.js](src/data.js).
-
-## Tester panel (desktop only)
-
-- **Restart** clears saved progress.
-- **Jump to screen** goes straight to any screen, grouped by section. Some screens are only reachable this way, e.g. "Ended (what the other person sees)".
-- **Plum's Afterglow answers**: yes / not yet for world photos, faces, ready to meet and numbers. If you are waiting on a "not yet", switching it to "yes" makes the mutual moment arrive.
-- **Plum after the meeting**: Plum's answer to "how did it feel?" and "meet again?".
-- **Your photo preference**: changes the flow live. "from the start" shows faces from question 1 and skips the faces Afterglow; "only when we meet" skips it and never shows faces.
-
-Inside the phone, two prototype-only links also show on mobile:
-
-- **[tester] skip ahead →** under each conversation question moves on without answering. It still stops at the Afterglow moments after questions 4, 8 and 12.
-- **[prototype] the day after →** on the power-down screen leads to "after the meeting".
+`npm run build` writes `dist/index.html` and copies it to `prelude-prototype-v3.html`.
 
 ## Structure
 
@@ -82,7 +26,32 @@ Inside the phone, two prototype-only links also show on mobile:
 index.html
 src/
   main.jsx     entry
-  App.jsx      state, tester controls and every screen
+  app.jsx      state, tester panel and every screen
+  art.js       sticker SVG: flower, bubble, moon, voice note, photos, faces, path
   data.js      all copy and mock content
-  styles.css   greyscale wireframe styles
+  styles.css   tokens, type, pills, tags, flower, motion
+  fonts/       Anton, Boldnova-Demo
 ```
+
+Design tokens, pills, tags, speech bubbles, flower states and the sticker artwork are ported from the Prelude
+landing page.
+
+## Tester panel
+
+A small "tester" pill in the top-right corner of the page (desktop). It opens Restart, Jump to screen,
+"Skip this question" (inside a prelude) and Plum's simulated answers: matching, each Afterglow, meet again.
+A "no" from Plum is never shown in the app; switching it to "yes" while you wait makes the mutual moment arrive.
+
+On a phone the pill is hidden. Add `#tester` to the URL to show it there.
+
+## What is simulated
+
+- Recording: a timer and moving bars. No microphone. "See transcript" shows a canned line per question.
+- Photos and faces: illustrated placeholders.
+- Matching: the first answer you say yes to becomes Plum, about 6 seconds after you reach the waiting screen.
+- Fern: a card on home only.
+
+## Notes
+
+- Boldnova-Demo is a demo font; check its licence before wider distribution. Anton is open source (SIL OFL).
+- The earlier grey wireframe versions are in this repository's git history.
