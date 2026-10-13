@@ -2,8 +2,8 @@
 
 A high-fidelity, clickable mobile prototype of Prelude. No backend: all data, recording and matching are simulated.
 
-The deliverable is one self-contained file, [prelude-prototype-v3.html](prelude-prototype-v3.html). Open it in a
-browser or put it on any static host. Script, styles and both fonts are inlined, so it works offline and from disk.
+The deliverable is one self-contained file, [index.html](index.html). Open it in a
+browser or put it on any static host (it is served at the root URL). Script, styles and both fonts are inlined, so it works offline and from disk.
 
 On desktop it shows in a phone frame; on a phone it fills the screen. Progress is kept in `localStorage`.
 
@@ -18,14 +18,16 @@ npm run dev
 npm run build
 ```
 
-`npm run build` writes `dist/index.html` and copies it to `prelude-prototype-v3.html`.
+`npm run build` writes `dist/index.html` and copies it to `index.html` at the project root. Do not edit that
+file by hand; the source entry is `src/index.html`.
 
 ## Structure
 
 ```
-index.html
+index.html     the built prototype (open this)
 src/
-  main.jsx     entry
+  index.html   source entry
+  main.jsx     entry script
   app.jsx      state, tester panel and every screen
   art.js       sticker SVG: flower, bubble, moon, voice note, photos, faces, path
   data.js      all copy and mock content
