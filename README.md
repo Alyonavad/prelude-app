@@ -25,6 +25,8 @@ file by hand; the source entry is `src/index.html`.
 
 ```
 index.html     the built prototype (open this)
+docs/
+  ui-rules.md  interactive / content / illustrative rule (applied to the portrait screen so far)
 src/
   index.html   source entry
   main.jsx     entry script
@@ -32,7 +34,8 @@ src/
   art.js       sticker SVG: flower, bubble, moon, voice note, photos, faces, path
   data.js      all copy and mock content
   styles.css   tokens, type, pills, tags, flower, motion
-  fonts/       Anton, Boldnova-Demo
+  fonts/       Anton, Dharma Gothic E Heavy, DIN Pro Medium, Boldnova-Demo
+  icons/       UI icons (check-circle.svg: the "saved" status icon)
 ```
 
 Design tokens, pills, tags, speech bubbles, flower states and the sticker artwork are ported from the Prelude
@@ -55,5 +58,6 @@ On a phone the pill is hidden. Add `#tester` to the URL to show it there.
 
 ## Notes
 
-- Boldnova-Demo is a demo font; check its licence before wider distribution. Anton is open source (SIL OFL).
+- Font licences: Anton is open source (SIL OFL). Dharma Gothic E and DIN Pro are commercial fonts and Boldnova-Demo is
+  a demo; all three are embedded in index.html, so check their web licences before sharing it widely.
 - The earlier grey wireframe versions are in this repository's git history.
