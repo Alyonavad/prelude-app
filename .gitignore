@@ -1,3 +1,7 @@
-node_modules
-dist
+node_modules/
+dist/
+dist-demo/
 .DS_Store
+
+# review images for the demo video (not part of the deliverable)
+demo-video/preview-*.png

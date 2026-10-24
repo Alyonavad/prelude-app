@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Prelude · demo</title>
+    <script>
+      // A fixed clock for the app's own timers, so every playback (and recording) is identical.
+      // The demo moves it forward frame by frame; nothing runs on wall-clock time.
+      ;(() => {
+        let now = 0
+        let seq = 1
+        const queue = new Map()
+        const add = (fn, ms, args, every) => {
+          const id = seq++
+          queue.set(id, { at: now + Math.max(every ? 1 : 0, +ms || 0), fn, args, every })
+          return id
+        }
+        window.setTimeout = (fn, ms, ...args) => add(fn, ms, args, false)
+        window.setInterval = (fn, ms, ...args) => add(fn, ms, args, true)
+        window.clearTimeout = window.clearInterval = (id) => queue.delete(id)
+        function advanceTo(t) {
+          for (;;) {
+            let next = null
+            for (const [id, x] of queue) if (x.at <= t && (!next || x.at < next[1].at)) next = [id, x]
+            if (!next) break
+            const [id, x] = next
+            now = x.at
+            if (x.every) x.at += Math.max(1, +x.every || 0)
+            else queue.delete(id)
+            if (typeof x.fn === 'function') x.fn(...x.args)
+          }
+          now = Math.max(now, t)
+        }
+        window.__clock = { advanceTo }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./demo.jsx"></script>
+  </body>
+</html>

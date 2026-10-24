@@ -1,0 +1,89 @@
+/* The 1080 x 1080 stage for the landing-page video. */
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #838fe2;
+}
+
+.stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1080px;
+  height: 1080px;
+  overflow: hidden;
+  background: #838fe2;
+  perspective: 2400px;
+  transform-origin: 0 0;
+}
+
+/* the camera: zoom, pan and tilt are set on this every frame (demo.jsx) */
+.rig {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 408px;
+  height: 880px;
+  margin: -440px 0 0 -204px;
+  will-change: transform, opacity;
+}
+.rig .phone {
+  transform: none;
+}
+
+/* the finger: a soft, frosted white circle, like Telegram's feature videos (motion in demo.jsx) */
+.tap {
+  position: absolute;
+  z-index: 50;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 05: the walkers are placed on the path every frame (demo.jsx), so their box fills the walk */
+.stage .plan-walk .walkers {
+  inset: 0;
+  animation: none;
+}
+.stage .plan-walk .walker {
+  animation: none;
+}
+
+/* 06: the moon without its little line, as on the landing page */
+.stage .powerdown-moon path:nth-of-type(3) {
+  display: none;
+}
+
+/* 06: the flower and the moon sway like the landing page's hero flower, out of step */
+.stage .powerdown-flower {
+  transform-origin: 50% 60%;
+  animation: demo-sway 3s ease-in-out infinite alternate;
+}
+.stage .powerdown-moon {
+  transform-origin: 50% 60%;
+  animation:
+    fade 1200ms ease-out 700ms both,
+    demo-sway 3s ease-in-out -1.7s infinite alternate;
+}
+@keyframes demo-sway {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+
+/* the design for 06 has no link; the prototype keeps one so its flow isn't a dead end */
+.stage .powerdown-next {
+  visibility: hidden;
+}

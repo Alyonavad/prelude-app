@@ -39,7 +39,7 @@
 :root {
   --blue: #6f8fea;
   --grey-bg: #9c9ca1;
-  --night: #1a2140;
+  --night: #2c3266; /* power down (docs/screens/video/06) */
   --ink: #05060f;
   --lilac: #d9b8f2;
   --pink: #f4a6b8;
@@ -123,7 +123,7 @@ svg {
 }
 .phone.night {
   background: var(--night);
-  transition: background-color 4500ms ease-in;
+  transition: background-color 1800ms ease-in-out;
 }
 
 .screen {
@@ -833,6 +833,7 @@ input.field {
 /* interactive: choice pill. White, 2.5px outline; pressed light grey; selected black with a check */
 .choices {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
@@ -1450,6 +1451,720 @@ input.field {
   height: 100%;
 }
 
+/* ---------- reflective questions: the composer, as drawn in docs/screens/group-1/composer-*.png ---------- */
+
+.reflect-head {
+  margin-top: 9px;
+}
+.reflect-steps {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+.reflect-steps i {
+  width: 27px;
+  height: 5px;
+  background: rgba(5, 6, 15, 0.25);
+  border-radius: 999px;
+}
+.reflect-steps i.on {
+  background: var(--ink);
+}
+
+/* a fixed slot for the flower; it grows up and to the right out of it, never pushing anything */
+.reflect-flower {
+  position: relative;
+  height: 64px;
+  margin: 34px 0 0 3px;
+}
+.reflect-flower-box {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transition: transform 900ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.reflect-flower .flower {
+  transform: rotate(-8deg);
+}
+
+/* the question is the hero: title font, left-aligned, 22pt margins; a size down when the composer grows */
+.reflect-question {
+  margin: 15px 6px 0;
+  font-size: 52px;
+  line-height: 0.92;
+  text-align: left;
+  transition: font-size 200ms ease;
+}
+.reflect-question.compact {
+  font-size: 40px;
+}
+.reflect-note {
+  margin: 16px 6px 0;
+  text-align: left;
+}
+
+/* pinned to the bottom, above the home indicator; the screen scrolls behind it if it must */
+.composer-wrap {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  margin-top: auto;
+  padding: 16px 0 22px;
+}
+@media (max-width: 499px) {
+  .composer-wrap {
+    padding-bottom: 8px;
+  }
+}
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.composer-side,
+.composer-main {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 14px;
+  border-radius: 50%;
+}
+.composer-side {
+  background: #fff;
+  border: 2.5px solid var(--ink);
+}
+.composer-side:active {
+  background: #e4e4e8;
+}
+.composer-side:disabled {
+  border-color: #8a8a92;
+  opacity: 0.5;
+  cursor: default;
+}
+.composer-main {
+  background: var(--ink);
+  border: 0;
+}
+.composer-main:active {
+  transform: scale(0.95);
+}
+.composer-side svg,
+.composer-main svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* stop: a red square with a soft pulsing ring */
+.composer-main.stop {
+  animation: composer-pulse 1.6s ease-out infinite;
+}
+@keyframes composer-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(5, 6, 15, 0.3), 0 0 0 0 rgba(5, 6, 15, 0.18);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(5, 6, 15, 0.12), 0 0 0 16px rgba(5, 6, 15, 0);
+  }
+}
+
+.composer-field {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 26px;
+}
+.composer-input {
+  display: block;
+  height: 52px;
+  padding: 12.5px 24px 12.5px 20px;
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 18px;
+  line-height: 22px;
+  color: var(--ink);
+  resize: none;
+  overflow-y: hidden;
+  outline: 0;
+}
+.composer-input::placeholder {
+  color: #74747c;
+}
+.composer-input:focus {
+  box-shadow: inset 0 0 0 0.5px var(--ink);
+}
+.composer-recording,
+.composer-voice {
+  display: flex;
+  align-items: center;
+  height: 52px;
+}
+.composer-recording {
+  gap: 14px;
+  padding: 0 18px 0 18px;
+}
+.composer-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: #ff3b30;
+  border-radius: 50%;
+  animation: fade 900ms ease-in-out infinite alternate;
+}
+.composer-timer {
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+}
+.composer-cancel {
+  margin: 0 0 0 auto;
+}
+.composer-voice {
+  gap: 10px;
+  padding: 0 14px 0 5px;
+}
+.composer-play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  background: var(--ink);
+  border: 0;
+  border-radius: 50%;
+}
+.composer-play svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.composer-bars {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+}
+.composer-time {
+  flex: none;
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* photos: a row of 76pt thumbnails from the left margin (under the "+"), 12pt above the composer;
+   it runs off the right edge and scrolls sideways */
+.composer-photos {
+  margin: 0 -16px 12px 0;
+  padding: 10px 16px 0 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.composer-photos::-webkit-scrollbar {
+  display: none;
+}
+.composer-photos .ui-thumbs {
+  gap: 10px;
+}
+.composer-photos .ui-thumb {
+  width: 76px;
+  height: 76px;
+}
+
+.composer-side:focus-visible,
+.composer-main:focus-visible,
+.composer-play:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 3px;
+}
+
+/* ---------- group 2: finding someone ---------- */
+
+/* a page title for busy screens: the reflections' hero size, left-aligned */
+.page-title {
+  margin: 9px 6px 0;
+  font-family: 'Dharma Gothic E', 'Anton', Impact, sans-serif;
+  font-size: 52px;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+.page-note {
+  margin: 14px 6px 0;
+  text-align: left;
+}
+.page-cards {
+  margin-top: 20px;
+}
+.section-label {
+  margin: 24px 6px 8px;
+  text-align: left;
+}
+/* the one primary button stays at the bottom while the cards scroll behind it; the screen colour
+   fades in above it and fills the gap below it, so nothing shows around or through the button */
+.actions.pinned {
+  position: sticky;
+  z-index: 2;
+  bottom: 0;
+  margin: auto -16px 0; /* auto on top keeps it at the bottom of short screens */
+  padding: 28px 16px 0;
+  background: linear-gradient(to bottom, transparent, var(--screen-bg, var(--blue)) 26px);
+}
+.actions.pinned::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: var(--screen-bg, var(--blue));
+}
+/* on a pinned bar the disabled button is the same dimmed black, but solid */
+.actions.pinned .ui-primary:disabled {
+  background: color-mix(in srgb, var(--ink) 60%, var(--screen-bg, var(--blue)));
+}
+.actions.pinned {
+  gap: 10px;
+}
+/* the pill pair in an answer card stays on one line */
+.answer-card .ui-choice {
+  padding: 0 12px;
+}
+
+/* answer cards */
+.answer-card {
+  gap: 12px;
+}
+.answer-card .ui-caption {
+  margin: 0;
+}
+.answer-who {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.flower-avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  transform: rotate(var(--r, 0deg));
+}
+.answer-card .ui-thumbs.small {
+  margin-top: 0;
+}
+.answer-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 16px 0 5px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 24px;
+}
+.answer-play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  background: var(--ink);
+  border: 0;
+  border-radius: 50%;
+}
+.answer-play svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.answer-play:active {
+  transform: scale(0.94);
+}
+.answer-voice-bars {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+}
+.answer-voice-time {
+  flex: none;
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 15px;
+  line-height: 1;
+}
+/* a locked answer ("answer to see theirs"): the same card, dimmed */
+.content-card.locked {
+  opacity: 0.55;
+}
+
+/* waiting */
+.waiting-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: auto 0;
+  padding-top: 16px;
+  text-align: center;
+}
+.waiting-art {
+  position: relative;
+  margin-bottom: 18px;
+}
+.waiting-moon {
+  position: absolute;
+  right: -40px;
+  bottom: 4px;
+  width: 50px;
+}
+.waiting-hero .ui-secondary {
+  margin-top: 8px;
+}
+.qotd-card {
+  margin-top: 16px;
+}
+
+/* a top bar with a back button and a centred caption */
+.page-bar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  margin-top: -3px;
+}
+.page-bar .ui-caption {
+  margin: 0;
+}
+/* interactive: icon button. 44 x 44, no outline; pressed shows a light circle */
+.ui-icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: none;
+  border: 0;
+  border-radius: 50%;
+}
+.ui-icon-button svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.ui-icon-button:active {
+  background: rgba(255, 255, 255, 0.45);
+}
+.ui-icon-button:focus-visible,
+.answer-play:focus-visible,
+.banner:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 3px;
+}
+/* the question of the day keeps the flower slot 34pt under its bar, like the reflections */
+.page-bar + .reflect-flower {
+  margin-top: 30px;
+}
+
+/* ---------- demo-video screens (docs/screens/video/01–06) ---------- */
+
+.phone.lilac {
+  --screen-bg: var(--lilac);
+}
+.phone.night {
+  --screen-bg: var(--night);
+}
+
+/* centred titles of these screens */
+.video-title {
+  margin-top: 32px;
+  font-family: 'Dharma Gothic E', 'Anton', Impact, sans-serif;
+  font-size: 80px;
+  line-height: 0.82;
+  text-align: center;
+  text-transform: uppercase;
+}
+.video-caption {
+  max-width: 300px;
+  margin: 18px auto 0;
+}
+.video-kicker {
+  margin-top: 26px;
+}
+.video-flower {
+  width: 127px;
+  margin: 20px auto 0;
+}
+.meet-title {
+  margin-top: 30px;
+  font-size: 64px;
+  line-height: 0.88;
+}
+.video-label {
+  margin-top: 14px;
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 22px;
+  line-height: 26px;
+  text-align: center;
+}
+.video-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+.video-cards .content-card {
+  padding: 18px 18px;
+}
+.video-card-text {
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 22px;
+  line-height: 32px;
+  text-transform: uppercase;
+}
+
+/* header: "‹ Home" · name · "N of 12" */
+.convo-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 4px;
+}
+.convo-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 8px 0 0;
+  font-family: 'DIN Pro', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  background: none;
+  border: 0;
+}
+.convo-home svg {
+  width: 20px;
+  height: 20px;
+}
+.convo-home:active {
+  opacity: 0.6;
+}
+.convo-home:focus-visible {
+  outline: 2px dashed var(--ink);
+  outline-offset: 3px;
+}
+.convo-name,
+.convo-count {
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+}
+.convo-count {
+  justify-self: end;
+}
+
+/* 02: the question as the hero, the answers as white cards */
+.convo-question {
+  margin-top: 40px;
+  font-family: 'Dharma Gothic E', 'Anton', Impact, sans-serif;
+  font-size: 52px;
+  line-height: 43px;
+  text-transform: uppercase;
+}
+.convo-cards {
+  margin-top: 46px;
+}
+.answer-label {
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 17px;
+  line-height: 20px;
+  color: #6b6b74;
+}
+.answer-text {
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 20px;
+  line-height: 27px;
+}
+.answer-voice.grey {
+  height: 62px;
+  padding: 0 18px 0 10px;
+  background: #e8e8ec;
+  border-width: 2px;
+  border-radius: 18px;
+}
+.answer-voice.grey .answer-play {
+  width: 44px;
+  height: 44px;
+  padding: 12px;
+}
+.convo-cards .ui-thumbs.small .ui-thumb {
+  width: 117px;
+  height: 111px;
+}
+.convo-cards .ui-thumbs.small .ui-thumb img {
+  border-width: 2.5px;
+  border-radius: 20px;
+}
+/* their answer arrives after yours: a gentle fade and rise */
+.reveal-later {
+  animation: rise 700ms cubic-bezier(0.22, 1, 0.36, 1) 600ms both;
+}
+.convo-tomorrow {
+  margin: auto 0 0;
+  padding-top: 24px;
+}
+
+/* 03 */
+.faces-flowers {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+.faces-flowers .flower + .flower {
+  margin-left: -36px;
+}
+.ui-secondary.block {
+  justify-content: center;
+  width: 100%;
+  height: 68px;
+}
+.actions.pinned .ui-secondary.block + *,
+.actions.pinned .ui-primary + .ui-secondary.block {
+  margin-top: 0;
+}
+
+/* 04: two straight frames (white halo, black outline), a "yes" above, the name below */
+.reveal-faces {
+  display: flex;
+  gap: 9px;
+  margin-top: 34px;
+}
+.reveal-face {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.yes-bubble {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 42px;
+  margin-bottom: 14px;
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 22px;
+  background: #fff;
+  border: 2.5px solid var(--ink);
+  border-radius: 14px;
+}
+.face-frame {
+  width: 100%;
+  aspect-ratio: 180 / 212;
+  padding: 6px;
+  background: #fff;
+  border-radius: 22px;
+}
+.face-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 2.5px solid var(--ink);
+  border-radius: 17px;
+}
+.face-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.reveal-name {
+  margin-top: 16px;
+  font-family: 'Anton', Impact, sans-serif;
+  font-size: 22px;
+  line-height: 1;
+}
+/* both faces at the same moment, after the bubbles: a soft scale and fade */
+.face-in {
+  animation: face-in 700ms cubic-bezier(0.22, 1, 0.36, 1) 800ms both;
+}
+@keyframes face-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+/* 05 */
+.plan-card {
+  gap: 8px;
+  margin-top: 30px;
+  padding: 18px;
+}
+.plan-title {
+  font-size: 22px;
+  line-height: 26px;
+}
+.plan-walk {
+  margin-top: 30px;
+  --walker: 17cqw;
+}
+.plan-walk .walkers {
+  animation-duration: 14s;
+}
+.plan-else {
+  align-self: center;
+  margin: 0;
+}
+
+/* 06: navy, white type, the moon fading in */
+.s-powerdown .powerdown-title,
+.s-powerdown .powerdown-caption,
+.s-powerdown .powerdown-next {
+  color: #fff;
+}
+.powerdown-moon {
+  position: absolute;
+  top: 80px;
+  right: 39px;
+  width: 75px;
+  animation: fade 1200ms ease-out 700ms both;
+}
+.powerdown-flower {
+  width: 127px;
+  margin: 116px auto 0;
+}
+.powerdown-title {
+  margin-top: 70px;
+  font-size: 100px;
+  line-height: 78px;
+  animation: fade 900ms ease-out 1100ms both;
+}
+.powerdown-caption {
+  max-width: 270px;
+  margin: 26px auto 0;
+  animation: fade 900ms ease-out 1300ms both;
+}
+.powerdown-next {
+  align-self: center;
+  margin: 0;
+  animation: fade 900ms ease-out 2400ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-later,
+  .face-in,
+  .powerdown-moon,
+  .powerdown-title,
+  .powerdown-caption,
+  .powerdown-next {
+    animation: none;
+  }
+}
+
 /* ---------- welcome: layout and entrance sequence ---------- */
 
 /* the hero spans the full phone width so the tags can sit past the headline's edges */
@@ -1603,6 +2318,7 @@ input.field {
   gap: 10px;
 }
 
+/* "Someone is here.": a black pill under the status bar; tappable, so no halo */
 .banner {
   position: absolute;
   z-index: 5;
@@ -1612,15 +2328,19 @@ input.field {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 22px;
-  font-size: 18px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  height: 56px;
+  padding: 0 24px;
+  font-family: 'DIN Pro', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   color: #fff;
   background: var(--ink);
-  border: 3px solid var(--ink);
+  border: 0;
   border-radius: 999px;
-  box-shadow: 0 0 0 5px #fff;
+}
+.banner:active {
+  transform: translateY(2px);
 }
 
 /* two flowers that turn to each other */

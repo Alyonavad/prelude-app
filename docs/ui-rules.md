@@ -65,6 +65,16 @@ Shared rules:
 - Inputs that have no button to commit them (e.g. "Not quite") autosave ~0.6s after the person stops typing and show the green check. Inputs on screens with a commit button (e.g. "Send & next question") show no check: the button is the save.
 - Status icons (e.g. "saved": icons/check-circle.svg, green #379A01) are never styled or behave like buttons: small (~20px), no pointer cursor, not focusable, not clickable.
 
+## Answer composer (reference: reflective questions)
+
+Whenever the person answers something (reflections, prelude conversation), use the composer instead of separate toggles and buttons. Reference mockups: docs/screens/group-1/composer-*.png.
+
+- The question is the hero: title font, large, left-aligned; a small flower sticker above it is fine.
+- One composer bar pinned to the bottom, all elements 52px tall: "+" (photos) · text field (grows up to ~5 lines) · one round black button that is a mic when empty and a send arrow when there's text or a recording.
+- Voice: mic → recording (red dot, timer, "Cancel", stop button) → recorded (delete, playable voice note, send).
+- Photos: "+" opens the action sheet ("Take photo" / "Choose from library" / "Cancel"); up to 6. Thumbnails sit in a row just above the bar, starting at the left margin; the row scrolls sideways and runs off the right edge, never clipped on the left.
+- Send is the save: no autosave check here.
+
 ## Example: the portrait screen
 
 | Element | Now | After |
@@ -83,8 +93,8 @@ The result: one card per tendency, each with its own answer, and the only sticke
 
 Keep the screen logic as it is; change only how elements look.
 
-- [ ] Welcome
-- [ ] Reflective questions (answer screen: toggle, record, transcript, world photo)
+- [x] Welcome
+- [x] Reflective questions (composer)
 - [x] Portrait ("Here's what we noticed") — reference screen: match this one
 - [ ] Mutual matching cards
 - [ ] Waiting / question of the day

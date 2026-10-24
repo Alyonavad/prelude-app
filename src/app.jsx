@@ -9,6 +9,8 @@ import { COLOURS, flowerSVG, bubbleSVG, MOON, voiceSVG, photoSVG, faceSVG, PATH 
 import { YOUR_FLOWER, FERN_FLOWER, REFLECT, TENDENCIES, QOTD, ANON, QUESTIONS, AFTERGLOW, ACTIVITIES } from './data.js'
 
 const STORAGE_KEY = 'prelude-prototype-v3'
+// The other person's name on the demo-video screens (docs/screens/video/)
+const THEM = 'Alex'
 // The phone frame: iPhone 16 Pro, the size the designs in docs/screens/ are drawn at
 // (a 402 x 874 screen plus the 3px frame)
 const PHONE_W = 408
@@ -75,6 +77,14 @@ const JUMPS = [
     ['faces', 'Faces reveal', convoAt(8, 'facesReveal', { world: 'yes', faces: 'yes' })],
     ['glow12', 'Afterglow: ready to meet', convoAt(12, 'glow', { world: 'yes', faces: 'yes' })],
     ['ending', 'Ending', (s) => ({ ...withPlum(s), screen: 'ending' })],
+  ]],
+  ['Video (docs/screens/video)', [
+    ['v1', '01 Meet Alex', (s) => ({ ...withPlum(s), screen: 'match', matchArrived: true })],
+    ['v2', '02 Conversation 1 of 12', (s) => ({ ...withPlum(s), screen: 'conversation', status: 'active', convo: { ...FRESH_CONVO, q: 1, phase: 'ready', mine: { kind: 'text', text: QUESTIONS[0].sample, photos: [] } } })],
+    ['v3', '03 Share faces?', convoAt(8, 'glow', { world: 'yes' })],
+    ['v4', '04 Faces reveal', convoAt(8, 'facesReveal', { world: 'yes', faces: 'yes' })],
+    ['v5', '05 Side by Side', (s) => ({ ...withPlum(s), screen: 'plan', status: 'plan', plan: { step: 'suggest', activity: 0 } })],
+    ['v6', '06 Power down', (s) => ({ ...withPlum(s), screen: 'powerdown', status: 'met' })],
   ]],
   ['Meeting', [
     ['where', 'Side by Side: where', (s) => ({ ...withPlum(s), screen: 'plan', status: 'plan', plan: { ...s.plan, step: 'where' } })],
@@ -145,7 +155,7 @@ export default function App() {
           <DeviceChrome />
           {waiting && s.matchArrived && (
             <button className="banner pop" onClick={() => set({ screen: 'match' })}>
-              <span>someone is here.</span>
+              <span>Someone is here.</span>
               <span>→</span>
             </button>
           )}
@@ -356,9 +366,19 @@ const StopIcon = () => (
     <rect x="9" y="9" width="14" height="14" rx="2.5" fill="#ff1f1f" />
   </svg>
 )
-const TrashIcon = () => (
+const TrashIcon = ({ colour = '#fff' }) => (
   <svg viewBox="0 0 24 24" aria-hidden="true">
-    <path d="M4.5 6.5h15M9.5 6.5V4.8c0-.7.6-1.3 1.3-1.3h2.4c.7 0 1.3.6 1.3 1.3v1.7M6.5 6.5l.8 12.2c.1.9.8 1.6 1.7 1.6h6c.9 0 1.6-.7 1.7-1.6l.8-12.2M10.3 10.5v6M13.7 10.5v6" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M4.5 6.5h15M9.5 6.5V4.8c0-.7.6-1.3 1.3-1.3h2.4c.7 0 1.3.6 1.3 1.3v1.7M6.5 6.5l.8 12.2c.1.9.8 1.6 1.7 1.6h6c.9 0 1.6-.7 1.7-1.6l.8-12.2M10.3 10.5v6M13.7 10.5v6" fill="none" stroke={colour} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
+const PlusIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" stroke="#05060f" strokeWidth="2.2" strokeLinecap="round" />
+  </svg>
+)
+const ArrowUpIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 19V5.5M6 11.5l6-6 6 6" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
 
@@ -604,37 +624,41 @@ function Welcome({ set }) {
   )
 }
 
-/* ---------- 2. reflective questions ---------- */
+/* ---------- 2. reflective questions: a Telegram-style composer (docs/screens/group-1/composer-*.png) ---------- */
 
 const foldAfter = (answered) => Math.max(0, 1 - answered * 0.3)
-const FLOWER_BOX = 144 // a 61pt bud at the start, as in the design
-// The flower's slot is as tall as the flower gets on these screens (reflection 3), so nothing below it
-// moves as it opens: it only grows inside the slot.
-const FLOWER_SLOT = Math.round(FLOWER_BOX * (0.865 - 0.44 * foldAfter(REFLECT.length - 1)))
+// The small open flower of composer-idle.png (64pt on reflection 1); it opens further and grows a
+// little on reflections 2 and 3
+const REFLECT_FOLDS = [0.45, 0.3, 0.15]
+const FLOWER_BOX = 91
+// how much of its box the flower fills at a given fold (measured: 42% as a bud, 65% at fold 0.4)
+const flowerVisible = (fold) => 0.794 - 0.37 * fold
+const FIELD_LINE = 22 // the composer's text line height
+const FIELD_MAX_LINES = 5
 
 function Reflect({ s, set }) {
   const i = s.reflect
   const last = i === REFLECT.length - 1
-  // the bud opens a little with each answer already given
-  const fold = useSettle(foldAfter(Math.max(0, i - 1)), foldAfter(i))
+  // the flower opens a little with each answer already given
+  const fold = useSettle(REFLECT_FOLDS[Math.max(0, i - 1)], REFLECT_FOLDS[i])
   return (
-    <Answer
-      s={s}
-      set={set}
+    <Composer
       head={
         <>
-          <div className="answer-head">
+          <div className="reflect-head">
             <p className="ui-caption">Reflection {i + 1} of {REFLECT.length}</p>
-            <p className="ui-caption">Just for you, no one is waiting</p>
+            <div className="reflect-steps" aria-hidden="true">
+              {REFLECT.map((_, n) => (
+                <i key={n} className={n === i ? 'on' : ''} />
+              ))}
+            </div>
           </div>
-          <div className="answer-flower" style={{ height: FLOWER_SLOT }}>
-            <Flower fold={fold} size={FLOWER_BOX} />
-          </div>
+          <FlowerSlot fold={fold} />
         </>
       }
       question={REFLECT[i].q}
       sample={REFLECT[i].sample}
-      sendLabel={last ? 'send' : 'send & next question'}
+      sendLabel={last ? 'Send' : 'Send & next question'}
       onSend={(a) =>
         set((p) => ({
           answers: p.answers.map((x, n) => (n === i ? a : x)),
@@ -642,6 +666,149 @@ function Reflect({ s, set }) {
         }))
       }
     />
+  )
+}
+
+// The small flower sticker above a hero question. Its visible bottom-left corner stays on the slot's,
+// so as it opens it grows up and to the right, into empty space, and nothing else on the screen moves.
+function FlowerSlot({ fold }) {
+  const offset = (FLOWER_BOX * (1 - flowerVisible(fold))) / 2
+  return (
+    <div className="reflect-flower" aria-hidden="true">
+      <div className="reflect-flower-box" style={{ width: FLOWER_BOX, transform: `translate(${-offset}px, ${offset}px)` }}>
+        <Flower fold={fold} size={FLOWER_BOX} />
+      </div>
+    </div>
+  )
+}
+
+// The question as the hero, and a composer pinned to the bottom: "+" (photos), a text field that
+// grows up to five lines, and one round button that is the mic, the stop or the send.
+// Text and voice are one or the other. Send is the save, so there is no autosave check here.
+function Composer({ head, question, sample, sendLabel, onSend, note = 'Just for you. No one is waiting.' }) {
+  const [rec, setRec] = useState('idle') // idle | recording | done
+  const [secs, setSecs] = useState(0)
+  const [listening, setListening] = useState(false)
+  const [text, setText] = useState('')
+  const [lines, setLines] = useState(1)
+  const [photos, setPhotos] = useState([])
+  const [picker, setPicker] = useState(false)
+  const photoRow = useRef(null)
+
+  // the photo row always shows its start, so the first photo is never clipped
+  useEffect(() => {
+    if (photoRow.current) photoRow.current.scrollLeft = 0
+  }, [photos.length])
+
+  useEffect(() => {
+    if (rec !== 'recording') return
+    const t = setInterval(() => setSecs((x) => x + 1), 1000)
+    return () => clearInterval(t)
+  }, [rec])
+
+  // the field grows upward with its text, up to five lines, then scrolls inside
+  const grow = (el) => {
+    el.style.height = 'auto'
+    const inner = Math.min(el.scrollHeight, FIELD_LINE * FIELD_MAX_LINES + 25)
+    el.style.height = `${inner + 5}px`
+    el.style.overflowY = el.scrollHeight > inner ? 'auto' : 'hidden'
+    setLines(Math.max(1, Math.round((inner - 25) / FIELD_LINE)))
+  }
+  const discard = () => {
+    setRec('idle')
+    setListening(false)
+    setSecs(0)
+  }
+  const hasText = text.trim().length > 0
+  const canSend = hasText || rec === 'done'
+  const send = () => onSend({ kind: rec === 'done' ? 'voice' : 'text', text: rec === 'done' ? sample : text.trim(), photos })
+  // the question steps down a size when the composer grows, so the two never meet
+  const compact = photos.length > 0 || lines > 1
+
+  return (
+    <>
+      {head}
+      <h1 className={`ui-title reflect-question${compact ? ' compact' : ''}`}>{question}</h1>
+      <p className="ui-caption reflect-note">{note}</p>
+
+      <div className="composer-wrap">
+        {photos.length > 0 && (
+          <div className="composer-photos" ref={photoRow}>
+            <PhotoThumbs photos={photos} onRemove={(n) => setPhotos((p) => p.filter((_, k) => k !== n))} />
+          </div>
+        )}
+        <div className="composer">
+          {rec === 'done' ? (
+            <button className="composer-side" aria-label="Delete recording" onClick={discard}>
+              <TrashIcon colour="#05060f" />
+            </button>
+          ) : rec === 'idle' ? (
+            <button className="composer-side" aria-label="Add a photo" disabled={photos.length >= MAX_PHOTOS} onClick={() => setPicker(true)}>
+              <PlusIcon />
+            </button>
+          ) : null}
+
+          {rec === 'recording' ? (
+            <div className="composer-field composer-recording" role="status">
+              <span className="composer-dot" aria-hidden="true" />
+              <span className="composer-timer">{fmt(secs)}</span>
+              <button className="ui-link composer-cancel" onClick={discard}>Cancel</button>
+            </div>
+          ) : rec === 'done' ? (
+            <div className={`composer-field composer-voice${listening ? ' playing' : ''}`}>
+              <button className="composer-play" aria-label={listening ? 'Pause' : 'Play'} onClick={() => setListening((l) => !l)}>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  {listening ? <path d="M6 4h3v12H6zM11 4h3v12h-3z" fill="#fff" /> : <path d="M7 4.5v11l9-5.5z" fill="#fff" />}
+                </svg>
+              </button>
+              <svg className="composer-bars" viewBox={`0 0 ${VOICE_BARS.length * 8} 40`} preserveAspectRatio="none" aria-hidden="true">
+                {VOICE_BARS.map((h, n) => (
+                  <rect key={n} className="bar" style={{ '--i': n }} x={n * 8 + 2} y={20 - h / 2} width="3.5" height={h} rx="1.75" fill="#05060f" />
+                ))}
+              </svg>
+              <span className="composer-time">{fmt(Math.max(secs, 1))}</span>
+            </div>
+          ) : (
+            <textarea
+              className="composer-field composer-input"
+              rows={1}
+              aria-label="Your answer"
+              placeholder="Write, or tap the mic…"
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value)
+                grow(e.target)
+              }}
+            />
+          )}
+
+          {rec === 'recording' ? (
+            <button className="composer-main stop" aria-label="Stop recording" onClick={() => setRec('done')}>
+              <StopIcon />
+            </button>
+          ) : canSend ? (
+            <button className="composer-main" aria-label={sendLabel} onClick={send}>
+              <ArrowUpIcon />
+            </button>
+          ) : (
+            <button className="composer-main" aria-label="Record" onClick={() => (setSecs(0), setRec('recording'))}>
+              <MicIcon />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {picker && (
+        <PhotoPicker
+          room={MAX_PHOTOS - photos.length}
+          onClose={() => setPicker(false)}
+          onAdd={(keys) => {
+            setPhotos((p) => [...p, ...keys].slice(0, MAX_PHOTOS))
+            setPicker(false)
+          }}
+        />
+      )}
+    </>
   )
 }
 
@@ -758,46 +925,104 @@ function Mirror({ s, set }) {
 
 /* ---------- 5. mutual matching ---------- */
 
+const VOICE_LENGTHS = { a: '0:14', b: '0:21', c: '0:17', d: '0:19' }
+
+// A small flower as an avatar: illustrative (tilted, with its halo), never tappable.
+function FlowerAvatar({ spec = YOUR_FLOWER, size = 40, r = -6 }) {
+  return (
+    <span className="flower-avatar" style={{ width: size, height: size, '--r': `${r}deg` }} aria-hidden="true">
+      <Flower spec={spec} size={Math.round(size * 1.46)} fold={0.3} />
+    </span>
+  )
+}
+
+// A voice note inside an answer card: content, with an interactive play button.
+function InlineVoice({ length, tone }) {
+  const [playing, setPlaying] = useState(false)
+  return (
+    <div className={`answer-voice${tone ? ` ${tone}` : ''}${playing ? ' playing' : ''}`}>
+      <button className="answer-play" aria-label={playing ? 'Pause' : 'Play'} onClick={() => setPlaying((p) => !p)}>
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          {playing ? <path d="M6 4h3v12H6zM11 4h3v12h-3z" fill="#fff" /> : <path d="M7 4.5v11l9-5.5z" fill="#fff" />}
+        </svg>
+      </button>
+      <svg className="answer-voice-bars" viewBox={`0 0 ${VOICE_BARS.length * 8} 40`} preserveAspectRatio="none" aria-hidden="true">
+        {VOICE_BARS.map((h, n) => (
+          <rect key={n} className="bar" style={{ '--i': n }} x={n * 8 + 2} y={20 - h / 2} width="3.5" height={h} rx="1.75" fill="#05060f" />
+        ))}
+      </svg>
+      <span className="answer-voice-time">{length}</span>
+    </div>
+  )
+}
+
+// An answer as content: a straight card (white or a conversation colour) with who wrote it,
+// the question small on top, then the voice note, the text and the photos. `children` go last
+// (choice pills, for example).
+function AnswerCard({ colour = 'white', avatar, name, label, question, voice, voiceTone, text, textCase, photos = [], locked, className = '', style, children }) {
+  return (
+    <div className={`content-card ${colour} answer-card${locked ? ' locked' : ''} ${className}`} style={style}>
+      {label && <p className="answer-label">{label}</p>}
+      {(avatar || name) && (
+        <div className="answer-who">
+          {avatar && <FlowerAvatar spec={avatar} />}
+          {name && <span className="ui-caption">{name}</span>}
+        </div>
+      )}
+      {question && <p className="ui-caption answer-q">{question}</p>}
+      {locked ? (
+        <p className="content-text">{locked}</p>
+      ) : (
+        <>
+          {voice && <InlineVoice length={voice} tone={voiceTone} />}
+          {text && <p className={textCase === 'sentence' ? 'answer-text' : 'content-text'}>{text}</p>}
+          <PhotoThumbs photos={photos} small />
+        </>
+      )}
+      {children}
+    </div>
+  )
+}
+
 function Matching({ s, set }) {
-  const pick = (id, v) => set((p) => ({ picks: { ...p.picks, [id]: v } }))
+  // tapping the chosen pill again takes the choice back (what "undo" did)
+  const pick = (id, v) => set((p) => ({ picks: { ...p.picks, [id]: p.picks[id] === v ? undefined : v } }))
   const allDone = ANON.every((c) => s.picks[c.id])
 
   return (
     <>
-      <h1 className="display m rise">SOMEONE MIGHT FEEL FAMILIAR.</h1>
-      <p className="body rise" style={{ margin: '10px 0 20px', '--d': '80ms' }}>no names, no photos. just how they answer.</p>
+      <h1 className="page-title rise">SOMEONE MIGHT FEEL FAMILIAR.</h1>
+      <p className="ui-caption page-note rise">No names, no photos. Just how they answer.</p>
 
-      <div className="stack">
+      <div className="portrait-cards page-cards">
         {ANON.map((c, i) => (
-          <div className="note rise" key={c.id} style={{ '--d': `${140 + i * 80}ms`, '--r': `${[-1, 0.8, -0.6, 1][i]}deg` }}>
-            {s.picks[c.id] ? (
-              <div className="row between">
-                <div className="who">
-                  <Flower spec={c.flower} size={40} fold={0.5} />
-                  <span className="small">noted. only you know.</span>
-                </div>
-                <button className="link" onClick={() => pick(c.id, undefined)}>undo</button>
-              </div>
-            ) : (
-              <>
-                <div className="who">
-                  <Flower spec={c.flower} size={52} />
-                  <span className="small">{REFLECT[c.reflect].q}</span>
-                </div>
-                <Voice fill={c.flower.fill} style={{ '--w': '190px', margin: '8px 0' }} />
-                <p className="body">{c.transcript}</p>
-                <div className="row stretch" style={{ marginTop: 14 }}>
-                  <button className="pill pill-small pill-black" onClick={() => pick(c.id, 'yes')}>i'd like to hear more</button>
-                  <button className="pill pill-small pill-white" onClick={() => pick(c.id, 'no')}>not this one</button>
-                </div>
-              </>
-            )}
-          </div>
+          <AnswerCard
+            key={c.id}
+            className="rise"
+            style={{ '--d': `${120 + i * 80}ms` }}
+            avatar={c.flower}
+            question={sentence(REFLECT[c.reflect].q)}
+            voice={VOICE_LENGTHS[c.id]}
+            text={c.transcript}
+          >
+            <div className="choices">
+              {[
+                ['yes', "I'd like to hear more"],
+                ['no', 'Not this one'],
+              ].map(([value, label]) => (
+                <button key={value} className="ui-choice" aria-pressed={s.picks[c.id] === value} onClick={() => pick(c.id, value)}>
+                  {s.picks[c.id] === value && <span className="ui-check" aria-hidden="true">✓</span>}
+                  {label}
+                </button>
+              ))}
+            </div>
+          </AnswerCard>
         ))}
       </div>
+      <p className="ui-caption ui-hint">Only you know what you chose.</p>
 
-      <div className="actions">
-        <button className="pill pill-black pill-block" disabled={!allDone} onClick={() => set({ screen: 'waiting' })}>done</button>
+      <div className="actions pinned">
+        <button className="ui-primary" disabled={!allDone} onClick={() => set({ screen: 'waiting' })}>Done</button>
       </div>
     </>
   )
@@ -809,29 +1034,33 @@ function Waiting({ s, set }) {
   const saidYes = ANON.some((c) => s.picks[c.id] === 'yes')
   return (
     <>
-      <div className="middle">
-        <div className="row" style={{ alignItems: 'flex-end', marginBottom: 18 }}>
-          <Flower size={150} className="pop" />
-          <Sticker html={MOON} className="pop" style={{ width: 54, '--d': '300ms' }} aria-hidden="true" />
+      <div className="waiting-hero">
+        <div className="waiting-art" aria-hidden="true">
+          <div className="sway">
+            <Flower size={132} className="pop" />
+          </div>
+          <Sticker html={MOON} className="pop waiting-moon" style={{ '--d': '300ms' }} />
         </div>
-        <h1 className="display rise">NO RUSH.</h1>
-        <p className="body rise" style={{ marginTop: 12, '--d': '100ms' }}>
-          {saidYes ? "we'll let you know when it's mutual." : 'nothing mutual yet. new answers arrive tomorrow.'}
+        <h1 className="ui-title rise">NO RUSH.</h1>
+        <p className="ui-caption rise" style={{ '--d': '100ms' }}>
+          {saidYes ? "We'll let you know when it's mutual." : 'Nothing mutual yet. New answers arrive tomorrow.'}
         </p>
-        <p className="small rise" style={{ marginTop: 8, '--d': '160ms' }}>a no is never shown to anyone. theirs or yours.</p>
+        <p className="ui-caption rise" style={{ '--d': '160ms' }}>A no is never shown to anyone. Theirs or yours.</p>
         {!saidYes && (
-          <button className="pill pill-small pill-white rise" style={{ marginTop: 16 }} onClick={() => set({ screen: 'matching', picks: {} })}>hear more answers</button>
+          <button className="ui-secondary rise" onClick={() => set({ screen: 'matching', picks: {} })}>Hear more answers</button>
         )}
       </div>
 
-      <div className="note rise" style={{ '--d': '260ms', '--r': '-1deg' }}>
-        <p className="small">while you wait · optional</p>
+      <div className="content-card white qotd-card rise" style={{ '--d': '260ms' }}>
+        <p className="ui-caption">While you wait · optional</p>
         {s.qotdDone ? (
-          <p className="body" style={{ marginTop: 6 }}>kept. just for you.</p>
+          <p className="content-text">Kept. Just for you.</p>
         ) : (
           <>
-            <p className="body" style={{ margin: '6px 0 12px' }}>{QOTD.q}</p>
-            <button className="pill pill-small pill-black" onClick={() => set({ screen: 'qotd' })}>answer it</button>
+            <p className="content-text">{QOTD.q}</p>
+            <div className="choices">
+              <button className="ui-secondary" onClick={() => set({ screen: 'qotd' })}>Answer it</button>
+            </div>
           </>
         )}
       </div>
@@ -839,23 +1068,29 @@ function Waiting({ s, set }) {
   )
 }
 
-function Qotd({ s, set }) {
+// The question of the day: the reflections' hero question and composer, with a way back.
+function Qotd({ set }) {
   return (
-    <>
-      <div className="row between" style={{ marginBottom: 14 }}>
-        <button className="link" onClick={() => set({ screen: 'waiting' })}>← back</button>
-        <span className="small">question of the day</span>
-      </div>
-      <Answer
-        s={s}
-        set={set}
-        label="just for you · no one is waiting"
-        question={QOTD.q}
-        sample={QOTD.sample}
-        sendLabel="keep it"
-        onSend={() => set({ screen: 'waiting', qotdDone: true })}
-      />
-    </>
+    <Composer
+      head={
+        <>
+          <div className="page-bar">
+            <button className="ui-icon-button" aria-label="Back" onClick={() => set({ screen: 'waiting' })}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M15 5.5 8.5 12l6.5 6.5" fill="none" stroke="#05060f" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <p className="ui-caption">Question of the day</p>
+            <span />
+          </div>
+          <FlowerSlot fold={REFLECT_FOLDS[0]} />
+        </>
+      }
+      question={QOTD.q}
+      sample={QOTD.sample}
+      sendLabel="Keep it"
+      onSend={() => set({ screen: 'waiting', qotdDone: true })}
+    />
   )
 }
 
@@ -874,34 +1109,33 @@ function Pair({ theirs, left, right, turned, eyes = 0 }) {
 }
 
 function Match({ s, set }) {
-  const plum = plumOf(s)
-  const turned = useSettle(false, true, 900)
   const begin = () =>
     set((p) => ({
       screen: 'home',
       ...(p.status === 'active' ? {} : { status: 'active', convo: FRESH_CONVO, plan: { step: 'where', activity: 0 }, after: FRESH_AFTER }),
     }))
 
+  // docs/screens/video/01-meet-alex.png
   return (
     <>
-      <h1 className="display rise">SOMEONE IS HERE.<br />MEET PLUM.</h1>
-      <Pair theirs={plum.flower} left="hi." right="hi." turned={turned} />
-
-      <p className="small" style={{ marginTop: 6 }}>why you resonated</p>
-      <div className="stack tight" style={{ margin: '10px 0 26px', alignItems: 'flex-start' }}>
-        <span className="tag pink pop" style={{ '--r': '-2deg', '--tag': '13.5px', '--d': '300ms' }}>{tendencyText(s, plum.pairs)}</span>
-        <span className="tag lilac pop" style={{ '--r': '2deg', '--tag': '13.5px', '--d': '450ms', alignSelf: 'flex-end' }}>{plum.tendency}</span>
+      <p className="ui-caption video-kicker rise">A match. You both said yes.</p>
+      <div className="video-flower pop" aria-hidden="true" style={{ '--d': '150ms' }}>
+        <div className="sway">
+          <Flower size={127} />
+        </div>
       </div>
-
-      <p className="small">your first exchange</p>
-      <h2 className="question" style={{ margin: '6px 0 16px', fontSize: 24 }}>{REFLECT[plum.reflect].q}</h2>
-      <div className="stack">
-        <Theirs plum={plum} text={plum.transcript} r={-1} />
-        <Mine answer={s.answers[plum.reflect]} fallback={REFLECT[plum.reflect].sample} />
+      <h1 className="video-title meet-title rise" style={{ '--d': '250ms' }}>SOMEONE IS HERE. MEET {THEM.toUpperCase()}.</h1>
+      <p className="video-label rise" style={{ '--d': '350ms' }}>Why you resonated</p>
+      <div className="video-cards">
+        <div className="content-card lilac rise" style={{ '--d': '450ms' }}>
+          <p className="video-card-text">You both open up when your hands are busy</p>
+        </div>
+        <div className="content-card mint rise" style={{ '--d': '550ms' }}>
+          <p className="video-card-text">You both need one person, not a crowd</p>
+        </div>
       </div>
-
-      <div className="actions">
-        <button className="pill pill-black pill-block" onClick={begin}>begin your prelude</button>
+      <div className="actions pinned">
+        <button className="ui-primary" onClick={begin}>Begin your prelude</button>
       </div>
     </>
   )
@@ -927,6 +1161,35 @@ function Theirs({ plum, text, photo, face, locked, r = -1 }) {
       )}
     </div>
   )
+}
+
+// The conversation header (docs/screens/video/02–05): "‹ Home" · their name · "N of 12".
+function ConvoHeader({ count, onHome }) {
+  return (
+    <div className="convo-header">
+      <button className="convo-home" onClick={onHome}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14.5 6 8.5 12l6 6" fill="none" stroke="#05060f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Home
+      </button>
+      <strong className="convo-name">{THEM}</strong>
+      <span className="convo-count">{count}</span>
+    </div>
+  )
+}
+
+// A face as an illustrated placeholder (no photos of real people), cropped to fill a frame.
+function FaceArt({ who }) {
+  const html = useMemo(
+    () =>
+      faceSVG(who === 'them' ? { bg: COLOURS.butter, hair: COLOURS.pink, style: 'bob', top: COLOURS.mint } : { bg: COLOURS.mint, hair: '#05060f', style: 'short', top: COLOURS.butter }).replace(
+        'viewBox="-6 -6 112 122"',
+        'viewBox="9.3 9.3 81.4 81.4" preserveAspectRatio="xMidYMid slice"',
+      ),
+    [who],
+  )
+  return <span className="face-art" dangerouslySetInnerHTML={{ __html: html }} />
 }
 
 /* ---------- 8. home ---------- */
@@ -1026,17 +1289,9 @@ function Conversation({ s, set }) {
     }
   }, [phase, plumYes])
 
-  const bar = (
-    <div className="tag lilac topbar">
-      <button onClick={() => set({ screen: 'home' })}>← home</button>
-      <span className="who">
-        <Flower spec={plum.flower} size={34} />
-        {glow.faces === 'yes' && <Face who="plum" className="avatar" style={{ width: 30 }} />}
-        plum
-      </span>
-      <span>{q} of {TOTAL}</span>
-    </div>
-  )
+  // leaving after both answers are in: the next question is "tomorrow", so it is waiting at home
+  const goHome = () => set((p) => (p.convo.phase === 'ready' ? { ...advance(p), screen: 'home' } : { screen: 'home' }))
+  const bar = <ConvoHeader count={`${q} of ${TOTAL}`} onHome={goHome} />
 
   if (phase === 'answer') {
     return (
@@ -1054,27 +1309,50 @@ function Conversation({ s, set }) {
     )
   }
 
+  // docs/screens/video/04-faces-reveal.png: the bubbles first, then both faces at the same moment
   if (phase === 'facesReveal') {
     return (
       <>
         {bar}
-        <div className="middle center">
-          <p className="small">afterglow · faces</p>
-          <h1 className="display rise" style={{ marginTop: 6 }}>IT'S MUTUAL.</h1>
-          <div className="faces">
-            <div className="pop" style={{ '--r': '-5deg', '--d': '500ms' }}>
-              <Face who="plum" />
-              <p className="small face-name">plum</p>
+        <h1 className="video-title rise">IT'S MUTUAL.</h1>
+        <p className="ui-caption video-caption rise" style={{ '--d': '80ms' }}>You both said yes.</p>
+        <div className="reveal-faces">
+          {[
+            [THEM, 'them'],
+            ['You', 'you'],
+          ].map(([name, who]) => (
+            <div className="reveal-face" key={who}>
+              <span className="yes-bubble pop" style={{ '--d': '250ms' }} aria-hidden="true">yes</span>
+              <div className="face-frame face-in">
+                <FaceArt who={who} />
+              </div>
+              <p className="reveal-name face-in">{name}</p>
             </div>
-            <div className="pop" style={{ '--r': '5deg', '--d': '500ms' }}>
-              <Face who="you" />
-              <p className="small face-name">you</p>
-            </div>
-          </div>
-          <p className="body">you're both seeing this at the same moment.</p>
+          ))}
         </div>
-        <div className="actions">
-          <button className="pill pill-black pill-block" onClick={() => set(nextQuestion)}>continue</button>
+        <div className="actions pinned">
+          <button className="ui-primary" onClick={() => set(nextQuestion)}>Continue</button>
+        </div>
+      </>
+    )
+  }
+
+  // docs/screens/video/03-share-faces.png
+  if (phase === 'glow' && m && m.key === 'faces') {
+    return (
+      <>
+        {bar}
+        <h1 className="video-title rise">SHARE FACES?</h1>
+        <p className="ui-caption video-caption rise" style={{ '--d': '80ms' }}>
+          Only if you both say yes. A “not yet” is never shown to {THEM}.
+        </p>
+        <div className="faces-flowers pop" aria-hidden="true" style={{ '--d': '200ms' }}>
+          <Flower size={127} />
+          <Flower size={127} />
+        </div>
+        <div className="actions pinned">
+          <button className="ui-primary" onClick={() => setC({ phase: 'glowWait' })}>Yes</button>
+          <button className="ui-secondary block" onClick={() => setC({ phase: 'glowNo' })}>Not yet</button>
         </div>
       </>
     )
@@ -1147,6 +1425,32 @@ function Conversation({ s, set }) {
 
   const revealed = phase === 'ready'
   const nextIsGlow = !!milestoneOf(s.convo)
+
+  // docs/screens/video/02-conversation.png: both answers in, the other one revealed after yours
+  if (revealed) {
+    const yours = mine || { kind: 'text', text: item.sample }
+    const theirPhotos = item.photoAlways || glow.world === 'yes' ? photosOf({ photo: item.photo }) : []
+    return (
+      <>
+        {bar}
+        <h1 className="convo-question rise">{item.q}</h1>
+        <div className="video-cards convo-cards">
+          <AnswerCard label="You" text={yours.text} textCase="sentence" photos={photosOf(yours)} />
+          <AnswerCard
+            className="reveal-later"
+            label={THEM}
+            voice={item.length || '0:04'}
+            voiceTone="grey"
+            text={sentence(item.a)}
+            textCase="sentence"
+            photos={theirPhotos}
+          />
+        </div>
+        <p className="ui-caption convo-tomorrow">Next question tomorrow. In your own time.</p>
+      </>
+    )
+  }
+
   return (
     <>
       {bar}
@@ -1216,31 +1520,27 @@ function Plan({ s, set }) {
     )
   }
 
+  // docs/screens/video/05-side-by-side.png
   return (
     <>
-      <p className="small rise">side by side · near {s.area.trim() || 'you both'}</p>
-      <h1 className="display m rise" style={{ margin: '8px 0 0', '--d': '60ms' }}>{activity.title}</h1>
-      <div className="walk" aria-hidden="true">
+      <ConvoHeader count={`${TOTAL} of ${TOTAL}`} onHome={() => set({ screen: 'home' })} />
+      <h1 className="video-title rise">SIDE BY SIDE.</h1>
+      <p className="ui-caption video-caption rise" style={{ '--d': '80ms' }}>Something calm, chosen for both of you.</p>
+      <div className="content-card white plan-card rise" style={{ '--d': '160ms' }} key={activity.title}>
+        <p className="answer-label">{sentence(activity.when)}</p>
+        <p className="answer-text plan-title">{sentence(activity.title)}</p>
+        <p className="answer-label">{sentence(activity.why)}</p>
+      </div>
+      <div className="walk plan-walk" aria-hidden="true">
         <Sticker html={PATH} />
         <div className="walkers">
           <Flower className="walker" look={0.6} />
-          <Flower spec={plum.flower} className="walker walker-b" look={-0.6} />
+          <Flower className="walker walker-b" look={-0.6} />
         </div>
-        <Sticker html={MOON} className="st pop" style={{ '--x': '80%', '--y': '4%', '--w': '13%', '--d': '400ms' }} />
-        <span className="st tag mint pop" style={{ '--x': '8%', '--y': '6%', '--r': '-4deg', '--tag': '13px', '--d': '300ms' }}>side by side</span>
       </div>
-      <div className="note" style={{ '--r': '-1deg', marginTop: 14 }} key={activity.title}>
-        <p className="body" style={{ textTransform: 'uppercase' }}>{activity.when}</p>
-        <p className="body" style={{ marginTop: 4 }}>{activity.why}</p>
-      </div>
-      <p className="small" style={{ margin: '20px 0 8px' }}>chosen around</p>
-      <div className="stack tight" style={{ alignItems: 'flex-start' }}>
-        <span className="tag pink" style={{ '--r': '-2deg', '--tag': '12.5px' }}>{tendencyText(s, plum.pairs)}</span>
-        <span className="tag butter" style={{ '--r': '1.5deg', '--tag': '12.5px', alignSelf: 'flex-end' }}>{plum.tendency}</span>
-      </div>
-      <div className="actions">
-        <button className="pill pill-black pill-block" onClick={() => set({ screen: 'powerdown', status: 'met' })}>sounds good</button>
-        <button className="pill pill-white pill-block" onClick={() => setP({ activity: s.plan.activity + 1 })}>suggest something else</button>
+      <div className="actions pinned">
+        <button className="ui-primary" onClick={() => set({ screen: 'powerdown', status: 'met' })}>Sounds good</button>
+        <button className="ui-link plan-else" onClick={() => setP({ activity: s.plan.activity + 1 })}>Suggest something else</button>
       </div>
     </>
   )
@@ -1248,20 +1548,18 @@ function Plan({ s, set }) {
 
 /* ---------- 11. power down ---------- */
 
+// docs/screens/video/06-power-down.png: the lilac fades to navy, the moon fades in
 function Powerdown({ set }) {
-  const fold = useSettle(0, 1, 500)
   return (
     <>
-      <div className="middle center">
-        <div className="stage" style={{ width: 230, margin: '0 auto 26px' }}>
-          <Flower className="slow" fold={fold} />
-          <Sticker html={MOON} className="st pop" style={{ '--x': '78%', '--y': '-12%', '--w': '34%', '--d': '2600ms' }} aria-hidden="true" />
-        </div>
-        <h1 className="display m fade" style={{ '--d': '3200ms' }}>THAT'S IT FROM US.<br />ENJOY IT.</h1>
-        <p className="body fade" style={{ marginTop: 14, '--d': '4800ms' }}>no reminders, no tips. we'll be quiet until afterwards.</p>
+      <Sticker html={MOON} className="powerdown-moon" aria-hidden="true" />
+      <div className="powerdown-flower" aria-hidden="true">
+        <Flower size={127} />
       </div>
+      <h1 className="video-title powerdown-title">THAT'S IT<br />FROM US.<br />ENJOY IT.</h1>
+      <p className="ui-caption powerdown-caption">No reminders. No tips. We'll be quiet until afterwards.</p>
       <div className="actions">
-        <button className="link fade" style={{ '--d': '6200ms' }} onClick={() => set({ screen: 'after', after: FRESH_AFTER })}>the next day →</button>
+        <button className="ui-link powerdown-next" onClick={() => set({ screen: 'after', after: FRESH_AFTER })}>The next day →</button>
       </div>
     </>
   )

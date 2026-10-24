@@ -70,10 +70,13 @@ export const ANON = [
 // The 12 prelude questions: Plum's answer, and the tester's simulated transcript.
 export const QUESTIONS = [
   {
-    q: 'what does a good quiet morning look like for you?',
-    a: 'radio low, window open, nobody needing anything from me until ten. toast i actually sit down for.',
-    photo: 'window',
-    sample: 'window open, coffee going cold because i forgot it. nobody talking yet.',
+    // the demo video's first question (docs/screens/video/02-conversation.png); its photo is always shown
+    q: 'when did you last feel completely at ease with someone?',
+    a: 'Repotting plants with my flatmate. I looked up and it was dark.',
+    photo: 'plants',
+    photoAlways: true,
+    length: '0:04',
+    sample: 'Shelling peas with my grandma on her balcony. Nobody had to say anything.',
   },
   {
     q: "what's a sound you love that most people don't notice?",
@@ -146,7 +149,8 @@ export const AFTERGLOW = {
 
 // Side by Side suggestions. `fits` lists the tendencies (index in TENDENCIES) each one suits.
 export const ACTIVITIES = [
-  { title: 'a slow walk along the river', when: 'saturday, 11:00', why: 'open air, something to look at, easy to leave anytime.', fits: [1, 2] },
+  // the demo video's plan (docs/screens/video/05-side-by-side.png): suits every tendency, so it comes first
+  { title: 'A slow walk along the river, then coffee at the market', when: 'Saturday · 11:00', why: 'Easy to leave · Quiet · Hands busy with coffee', fits: [0, 1, 2] },
   { title: 'the sunday flower market', when: 'sunday, 10:00', why: 'plenty to look at. no need to fill the silences.', fits: [2, 1] },
   { title: 'the community garden open day', when: 'sunday, 14:00', why: 'hands busy. they always need help watering.', fits: [0] },
   { title: 'feeding the ducks at the park pond', when: 'saturday, 15:00', why: 'hands busy, benches nearby, wide open.', fits: [0, 1] },
